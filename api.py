@@ -6,10 +6,11 @@ from typing import Optional
 app = FastAPI()
 
 @app.post("/api/imagem/extracoes")
-def extrair_dados_imagem(file: UploadFile = Optional[File]):
+async def extrair_dados_imagem(file: UploadFile = Optional[File]):
     """Extrai dados de uma imagem"""
-    if (not isinstance(file, UploadFile)):
-        print("Aviso: Arquivo não enviado!")
+
+    conteudos: str = await file.read()
+    print(conteudos)
 
     return {"exemplo": "deu certo"}
 
