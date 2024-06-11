@@ -10,4 +10,4 @@ def extrair_dados_imagem(file: UploadFile):
     ...
 
 if __name__ == '__main__':
-    uvicorn.run(app, host="0.0.0.0", port="3000")
+    uvicorn.run(app, host="0.0.0.0", port=3000)
