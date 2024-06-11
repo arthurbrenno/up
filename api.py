@@ -6,7 +6,7 @@ from typing import Optional
 app = FastAPI()
 
 @app.post("/api/imagem/extracoes")
-async def extrair_dados_imagem(file: UploadFile = Optional[File]):
+async def extrair_dados_imagem(file: UploadFile):
     """Extrai dados de uma imagem"""
 
     conteudos: str = await file.read()
