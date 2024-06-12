@@ -15,9 +15,10 @@ from typing import List
 logging.basicConfig(level=logging.INFO)
 logger.setLevel(logging.INFO)
 
+# Inicialização do aplicativo FastAPI
 app = FastAPI()
 
-# Configuração de CORS
+# Configuração de CORS para permitir requisições de qualquer origem
 origins = ["*"]
 
 app.add_middleware(
@@ -30,16 +31,22 @@ app.add_middleware(
 
 
 @app.post("/api/imagem/extracoes")
-async def extrair_dados_imagem(file: UploadFile) -> JSONResponse:
+async def extrair_dados_imagem(file: UploadFile = File(...)) -> JSONResponse:
     """
-    Extrai dados de uma imagem.
-    :param file: Arquivo de imagem para extração.
-    :return: Dicionário contendo os elementos extraídos da imagem.
+    Extrai dados de uma imagem fornecida pelo usuário.
+    
+    Args:
+        file (UploadFile): Arquivo de imagem para extração.
+    
+    Returns:
+        JSONResponse: Resposta contendo os elementos extraídos da imagem.
     """
     logger.info(f"Recebendo arquivo {file.filename}")
     logger.info(f"Tipo do arquivo: {file.content_type}")
 
+    # Verifica se o arquivo é uma imagem
     if not file.content_type.startswith("image/"):
+        logger.warning(f"Arquivo {file.filename} não é uma imagem.")
         raise HTTPException(
             status_code=400,
             detail={
@@ -49,12 +56,14 @@ async def extrair_dados_imagem(file: UploadFile) -> JSONResponse:
         )
 
     try:
-        # Extrair os bytes do arquivo de maneira assíncrona
-        with Image.open(io.BytesIO(await file.read())) as img:
+        # Extrair os bytes do arquivo de maneira assíncrona e processar a imagem
+        img_bytes = await file.read()
+        with Image.open(io.BytesIO(img_bytes)) as img:
             image = io.BytesIO()
             img.convert("RGB").save(image, format="JPEG")
             image.seek(0)
 
+        # Extração dos elementos da imagem usando a biblioteca Unstructured
         elements: List[Element] = partition_image(
             file=image,
             languages=["por"],
@@ -73,7 +82,7 @@ async def extrair_dados_imagem(file: UploadFile) -> JSONResponse:
     except Exception as e:
         logger.error(f"Erro ao processar a imagem {file.filename}: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Erro ao processar a imagem {file.filename}"
+            status_code=500, detail=f"Erro ao processar a imagem {file.filename}: {e}"
         )
 
     return JSONResponse(content=resultado)
