@@ -1,13 +1,10 @@
 from fastapi import FastAPI, UploadFile
 from unstructured.partition.image import partition_image
-import uvicorn
 import io
 import PIL
 from typing import List
 from unstructured.documents.elements import Element
-from unstructured.partition.utils.constants import OCRMode, PartitionStrategy
-from pdfminer.utils import open_filename
- #from PIL import Image
+from unstructured.partition.utils.constants import PartitionStrategy
 
 app = FastAPI()
 
@@ -32,8 +29,6 @@ async def extrair_dados_imagem(file: UploadFile) -> dict:
     )
 
     return {
-        "elements": [element.to_dict() for element in elements]
+        "elements": [element.to_dict() for element in elements],
+        "message": "Extração de dados da imagem realizada com sucesso!"
     }
-
-if __name__ == '__main__':
-    uvicorn.run(app, host="0.0.0.0", port=3000)
