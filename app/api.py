@@ -147,11 +147,106 @@ async def execute_with_tesseract(img_bytes: bytes, file: UploadFile) -> Any:
         return {
             "detail": f"Error extracting text from the image {file.filename}: {str(e)}"
         }
+        
+#     {
+#     "filename": "5-periodo.png",
+#     "content_type": "image/png",
+#     "elements": {
+#         "level": [
+#             1,
+#             2,
+#         ],
+#         "page_num": [
+#             1,
+#             1,
+#             1,
+#             1,
+#         ],
+#         "block_num": [
+#             0,
+#             1,
+#             1,
+#         ],
+#         "par_num": [
+#             0,
+#             0,
+#             1,
+#             1,
+#             1,
+#             0,
+#             1,
+#         ],
+#         "line_num": [
+#             0,
+#             0,
+#             0,
+#         ],
+#         "word_num": [
+#             0,
+#             0,
+#         ],
+#         "left": [
+#             0,
+#             37,
+#             ...
+#         ],
+#         "top": [
+#             0,
+#             18,
+#         ],
+#         "width": [
+#             945,
+#             ...
+#         ],
+#         "height": [
+#             362,
+#             1,
+#         ],
+#         "conf": [
+#             -1,
+#             -1,
+#         ],
+#         "text": [
+#             "",
+#             "",
+#             "",
+#             "",
+#             " ",
+#             "",
+#             "",
+#             "",
+#             "5º",
+#             "PERÍODO",
+#         ]
+#     }
+
+    # Build elements array with the non empty texts.
+    # Associate with their respective index.
+    # each index is related to all other indexes in the same position.
+    # create an array of "elements" objects containing all the info present at the same index.
+    result = []
+    for i in range(len(data["text"])):
+        if data["text"][i].strip() != "":
+            element = {
+                "level": data["level"][i],
+                "page_num": data["page_num"][i],
+                "block_num": data["block_num"][i],
+                "par_num": data["par_num"][i],
+                "line_num": data["line_num"][i],
+                "word_num": data["word_num"][i],
+                "left": data["left"][i],
+                "top": data["top"][i],
+                "width": data["width"][i],
+                "height": data["height"][i],
+                "conf": data["conf"][i],
+                "text": data["text"][i],
+            }
+            result.append(element)
 
     return {
         "filename": file.filename,
         "content_type": file.content_type,
-        "elements": data,
+        "elements": result,
         "message": "Text extraction from image successful!",
     }
 
