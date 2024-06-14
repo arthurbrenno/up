@@ -176,4 +176,4 @@ async def execute_with_tesseract(img_bytes: bytes, file: UploadFile) -> Any:
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=3000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
