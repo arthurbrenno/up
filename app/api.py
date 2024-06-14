@@ -11,9 +11,13 @@ from unstructured.partition.image import partition_image
 from unstructured.documents.elements import Element
 from unstructured.partition.utils.constants import PartitionStrategy
 import io
-from PIL import Image
+import PIL
 import logging
 from typing import List
+import pytesseract
+from typing import Any
+from fastapi import Form
+from pytesseract import Output
 
 # Configuração do logging
 logging.basicConfig(level=logging.INFO)
@@ -61,7 +65,9 @@ def execute_script():
 
 
 @app.post("/api/imagem/extracoes")
-async def extrair_dados_imagem(file: UploadFile = File(...)) -> JSONResponse:
+async def extrair_dados_imagem(
+    file: UploadFile = File(...), strategy: str = Form(...)
+) -> JSONResponse:
     """
     Extrai dados de uma imagem fornecida pelo usuário.
 
@@ -92,10 +98,26 @@ async def extrair_dados_imagem(file: UploadFile = File(...)) -> JSONResponse:
     try:
         # Extrair os bytes do arquivo de maneira assíncrona e processar a imagem
         img_bytes = await file.read()
-        with Image.open(io.BytesIO(img_bytes)) as img:
-            image = io.BytesIO()
-            img.convert("RGB").save(image, format="JPEG")
-            image.seek(0)
+        resultado = None
+        if strategy == "tesseract":
+            resultado = await execute_with_tesseract(img_bytes, file)
+        else:
+            resultado = await execute_with_unstructured(img_bytes, file)
+
+    except Exception as e:
+        logger.error(f"Erro ao processar a imagem {file.filename}: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao processar a imagem {file.filename}: {e}"
+        )
+
+    return JSONResponse(content=resultado)
+
+
+async def execute_with_unstructured(img_bytes: bytes, file: UploadFile) -> dict:
+    with PIL.Image.open(io.BytesIO(img_bytes)) as img:
+        image = io.BytesIO()
+        img.convert("RGB").save(image, format="JPEG")
+        image.seek(0)
 
         # Extração dos elementos da imagem usando a biblioteca Unstructured
         elements: List[Element] = partition_image(
@@ -106,20 +128,32 @@ async def extrair_dados_imagem(file: UploadFile = File(...)) -> JSONResponse:
             hi_res_model_name="yolox",
         )
 
-        resultado = {
+        return {
             "filename": file.filename,
             "content_type": file.content_type,
             "elements": [element.to_dict() for element in elements],
             "message": "Extração de dados da imagem realizada com sucesso!",
         }
 
-    except Exception as e:
-        logger.error(f"Erro ao processar a imagem {file.filename}: {e}")
-        raise HTTPException(
-            status_code=500, detail=f"Erro ao processar a imagem {file.filename}: {e}"
-        )
 
-    return JSONResponse(content=resultado)
+async def execute_with_tesseract(img_bytes: bytes, file: UploadFile) -> Any:
+    """Extracts text from an image using Tesseract OCR."""
+    # Extract text from the image using Tesseract OCR
+    try:
+        data = pytesseract.image_to_data(
+            PIL.Image.open(io.BytesIO(img_bytes)), lang="por", output_type=Output.DICT
+        )
+    except Exception as e:
+        return {
+            "detail": f"Error extracting text from the image {file.filename}: {str(e)}"
+        }
+
+    return {
+        "filename": file.filename,
+        "content_type": file.content_type,
+        "elements": data,
+        "message": "Text extraction from image successful!",
+    }
 
 
 if __name__ == "__main__":
