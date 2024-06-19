@@ -1,4 +1,4 @@
 fastapi==0.111.0
-unstructured[all-docs]==0.14.5
+unstructured[image]==0.14.5
 pytesseract==0.3.10
 uvicorn==0.30.1
