@@ -43,7 +43,7 @@ def execute_script():
     if platform.system() == "Windows":
         current_dir = os.path.dirname(os.path.abspath(__file__))
         parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
-        script_path = os.path.join(parent_dir, "upgrade_perms.ps1")
+        script_path = os.path.join(parent_dir, "perms.ps1")
         try:
             # Chamar o PowerShell e forçar a execução do script
             subprocess.run(
@@ -79,7 +79,10 @@ async def extrair_dados_imagem(
     """
 
     # SE COMEÇAR A DAR ERRO, COMENTE A LINHA ABAIXO.
-    execute_script()
+    try:
+        execute_script()
+    except:
+        print("...")
 
     logger.info(f"Recebendo arquivo {file.filename}")
     logger.info(f"Tipo do arquivo: {file.content_type}")
