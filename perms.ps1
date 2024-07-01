@@ -10,7 +10,7 @@ function Test-Admin {
 
 # Se não estiver sendo executado com privilégios elevados, reinicie como administrador
 if (-not (Test-Admin)) {
-    Start-Process powershell -ArgumentList "-File `"$PSCommandPath`" -Path `"$Path`"" -Verb RunAs
+    Start-Process powershell -ArgumentList "-ExecutionPolicy Bypass -File `"$PSCommandPath`" -Path `"$Path`"" -Verb RunAs
     exit
 }
 
